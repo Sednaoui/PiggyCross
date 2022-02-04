@@ -5,6 +5,10 @@ import { useParams } from 'react-router-dom';
 import { useProvider } from 'wagmi';
 
 import { ETH } from '../../../../lib/constants/currencies';
+import {
+    MAINNET,
+    POLYGON_MAINNET,
+} from '../../../../lib/constants/networks';
 import { getEthereumNetwork } from '../../../../lib/helpers';
 import {
     Form,
@@ -26,6 +30,8 @@ import {
 import { getBlockPrices } from '../../../store/transactions/actions';
 import GasSettings from './GasSettings';
 
+const networkList = [MAINNET, POLYGON_MAINNET];
+
 const Send = (): React.ReactElement => {
     const provider = useProvider() as AlchemyProvider;
     const dispatch = useAppDispatch();
@@ -44,11 +50,19 @@ const Send = (): React.ReactElement => {
 
     const assetList = useAppSelector((state) => state.assets.assets);
 
-    const list = assetList.map((token) => (
+    const assetListOptions = assetList.map((token) => (
         <option
             key={token.asset.symbol}
             value={token.asset.symbol}>
             {token.asset.symbol}
+        </option>
+    ));
+
+    const networkListOptions = networkList.map((network) => (
+        <option
+            key={network.name}
+            value={network.name}>
+            {network.name}
         </option>
     ));
 
@@ -128,34 +142,78 @@ const Send = (): React.ReactElement => {
                         </Col>
                     </Row>
                     <Form.Group>
-                        <Form.Label>
-                            Select Token
-                        </Form.Label>
-                        <Form.Select
-                            required
-                            onChange={(e) => {
-                                setAssetSymbolSelect(e.target.value);
-                                setGasLimit(e.target.value === ETH.symbol
-                                    ? ETHTransferGasLimit : ERC20TransferGasLimit);
-                            }}
-                            defaultValue={assetSymbol}>
-                            {list}
-                        </Form.Select>
+                        <Row>
+                            <Col>
+                                <Form.Label>
+                                    Send
+                                </Form.Label>
+                            </Col>
+                            <Col>
+                                <Form.Select
+                                    required
+                                    onChange={(e) => {
+                                        setAssetSymbolSelect(e.target.value);
+                                        setGasLimit(e.target.value === ETH.symbol
+                                            ? ETHTransferGasLimit : ERC20TransferGasLimit);
+                                    }}
+                                    defaultValue={assetSymbol}>
+                                    {assetListOptions}
+                                </Form.Select>
+                            </Col>
+                        </Row>
                     </Form.Group>
                     <Form.Group>
                         <Form.Label>
-                            Amount
+                            From
                         </Form.Label>
-                        <Form.Control
-                            required
-                            type="text"
-                            placeholder="0.00"
-                            name="amount"
-                            onChange={(e) => setTokenAmount(e.target.value)} />
+                        <Row>
+                            <Col>
+                                <Form.Select
+                                    required
+                                    onChange={(e) => console.log('select network from', e)}
+                                    defaultValue={MAINNET.name}>
+                                    {networkListOptions}
+                                </Form.Select>
+
+                            </Col>
+                            <Col>
+                                <Form.Control
+                                    required
+                                    type="text"
+                                    placeholder="0.00"
+                                    name="amount"
+                                    onChange={(e) => setTokenAmount(e.target.value)} />
+                            </Col>
+                        </Row>
                     </Form.Group>
                     <Form.Group>
                         <Form.Label>
-                            Address
+                            To (estimated)
+                        </Form.Label>
+                        <Row>
+                            <Col>
+                                <Form.Select
+                                    required
+                                    onChange={(e) => console.log('Select Network To', e)}
+                                    defaultValue={POLYGON_MAINNET.name}>
+                                    {networkListOptions}
+                                </Form.Select>
+
+                            </Col>
+                            <Col>
+                                <Form.Control
+                                    disabled
+                                    required
+                                    type="text"
+                                    placeholder="0.00"
+                                    name="amount"
+                                    defaultValue="0.00" />
+                            </Col>
+                        </Row>
+                    </Form.Group>
+                    <Form.Group>
+                        <Form.Label>
+                            Recipient Address
                         </Form.Label>
                         <Form.Control
                             required
@@ -163,6 +221,31 @@ const Send = (): React.ReactElement => {
                             placeholder="0x0d8775f648430679a709e98d2b0cb6250d2887ef"
                             name="address"
                             onChange={(e) => setRecipient(e.target.value)} />
+                    </Form.Group>
+                    <Form.Group>
+                        <Row>
+                            <Col>
+                                <Form.Label>
+                                    Fee:
+                                    {' '}
+                                    {gasPriceOfTXInETH}
+                                    {' '}
+                                    ETH
+                                </Form.Label>
+                            </Col>
+                            <Col>
+                                <Button
+                                    variant="link"
+                                    type="button"
+                                    onClick={() => setShow(true)}>
+                                    Fee Settings
+                                </Button>
+                            </Col>
+                            <GasSettings
+                                gasLimit={gasLimit}
+                                show={show}
+                                close={handleClose} />
+                        </Row>
                     </Form.Group>
                     <Form.Group>
                         <Form.Label>
@@ -174,25 +257,6 @@ const Send = (): React.ReactElement => {
                             placeholder="Password"
                             name="password"
                             onChange={(e) => setPassword(e.target.value)} />
-                    </Form.Group>
-                    <Form.Group>
-                        <Form.Label>
-                            Estimated Fee:
-                            {' '}
-                            {gasPriceOfTXInETH}
-                            {' '}
-                            ETH
-                        </Form.Label>
-                        <Button
-                            variant="link"
-                            type="button"
-                            onClick={() => setShow(true)}>
-                            Fee Settings
-                        </Button>
-                        <GasSettings
-                            gasLimit={gasLimit}
-                            show={show}
-                            close={handleClose} />
                     </Form.Group>
                     <Button
                         disabled={!utils.isAddress(recipient)}
