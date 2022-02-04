@@ -1,5 +1,8 @@
 import { EVMNetwork } from '../networks';
-import { ETH } from './currencies';
+import {
+    ETH,
+    MATIC,
+} from './currencies';
 
 export const MAINNET: EVMNetwork = {
     name: 'Mainnet',
@@ -15,3 +18,9 @@ export const ROPSTEN: EVMNetwork = {
     family: 'EVM',
 };
 
+export const POLYGON_MAINNET: EVMNetwork = {
+    name: 'Polygon Mainnet',
+    baseAsset: MATIC,
+    chainID: '137',
+    family: 'EVM',
+};
