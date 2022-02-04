@@ -3,6 +3,7 @@ import {
     BaseProvider,
     TransactionResponse,
 } from '@ethersproject/providers';
+import { Chain } from '@hop-protocol/sdk';
 import {
     Wallet,
     utils,
@@ -12,8 +13,13 @@ import {
 import ERC20ABI from '../../lib/abi/erc20.json';
 import { HexString } from '../../lib/accounts';
 import { getAssetTransfers } from '../../lib/alchemy';
-import { AnyAssetTransfer } from '../../lib/assets';
+import {
+    AnyAssetTransfer,
+    FungibleAsset,
+} from '../../lib/assets';
+import { ETH } from '../../lib/constants/currencies';
 import { fromFixedPoint } from '../../lib/helpers';
+import { sendHop } from '../../lib/hop/hop';
 
 /**
  * Tranfer ETH from one account to another.
@@ -88,7 +94,9 @@ export const sendERC20 = async (
  * @param sendTokenAmout the amount of tokens to send
  * @param toAddress the address to send the tokens to
  * @param privateKey the private key of the account to send the tokens from
- * @param contractAddress the address of the token contract
+ * @param tokenSelected asset to be transfer
+ * @param fromNetwork network of the sender
+ * @param toNetwork network of the receiver
  * @returns
  */
 export const transferTokens = async (
@@ -96,12 +104,32 @@ export const transferTokens = async (
     sendTokenAmout: string,
     toAddress: string,
     privateKey: string,
-    contractAddress?: string,
+    tokenSelected: FungibleAsset,
+    fromNetwork: Chain,
+    toNetwork: Chain,
 ): Promise<TransactionResponse | string> => {
-    if (contractAddress) {
-        return sendERC20(provider, sendTokenAmout, toAddress, privateKey, contractAddress);
-    } else {
+    if (tokenSelected.symbol === ETH.symbol
+        && fromNetwork.name === Chain.Ethereum.name
+        && toNetwork.name === Chain.Ethereum.name) {
         return sendETH(provider, sendTokenAmout, toAddress, privateKey);
+    } else if (tokenSelected.symbol !== ETH.symbol
+        && fromNetwork.name === Chain.Ethereum.name
+        && toNetwork.name === Chain.Ethereum.name) {
+        // TODO: make this multi-network
+        return sendERC20(
+            // @ts-expect-error: expect error at tokenSelected
+            provider, sendTokenAmout, toAddress, privateKey, tokenSelected.contractAddress,
+        );
+    } else if (toNetwork && fromNetwork && toNetwork.name !== fromNetwork.name && tokenSelected) {
+        return sendHop(
+            tokenSelected,
+            fromNetwork,
+            toNetwork,
+            sendTokenAmout,
+            privateKey,
+        );
+    } else {
+        return 'Invalid transfer';
     }
 };
 

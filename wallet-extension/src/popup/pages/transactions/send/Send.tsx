@@ -1,15 +1,13 @@
 import { AlchemyProvider } from '@ethersproject/providers';
+import { Chain } from '@hop-protocol/sdk';
 import { utils } from 'ethers';
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useProvider } from 'wagmi';
 
 import { ETH } from '../../../../lib/constants/currencies';
-import {
-    MAINNET,
-    POLYGON_MAINNET,
-} from '../../../../lib/constants/networks';
 import { getEthereumNetwork } from '../../../../lib/helpers';
+import { estimateBonderAndDestinationFee } from '../../../../lib/hop/hop';
 import {
     Form,
     Button,
@@ -30,7 +28,7 @@ import {
 import { getBlockPrices } from '../../../store/transactions/actions';
 import GasSettings from './GasSettings';
 
-const networkList = [MAINNET, POLYGON_MAINNET];
+const networkList = [Chain.Ethereum, Chain.Polygon, Chain.Optimism, Chain.Gnosis, Chain.Arbitrum];
 
 const Send = (): React.ReactElement => {
     const provider = useProvider() as AlchemyProvider;
@@ -40,7 +38,10 @@ const Send = (): React.ReactElement => {
     const [assetSymbolSelect, setAssetSymbolSelect] = useState(assetSymbol);
 
     const [recipient, setRecipient] = useState('');
-    const [tokenAmount, setTokenAmount] = useState('');
+    const [tokenAmount, setTokenAmount] = useState('0');
+    const [fromNetwork, setFromNetwork] = useState(Chain.Optimism);
+    const [toNetwork, setToNetwork] = useState(Chain.Polygon);
+    const [hopFee, setHopFee] = useState('0');
     const [password, setPassword] = useState('');
     const [txTransaction, setTxTransaction] = useState('');
 
@@ -66,10 +67,9 @@ const Send = (): React.ReactElement => {
         </option>
     ));
 
-    const contractAddressOfTokenSelected = useAppSelector((state) =>
+    const tokenSelected = useAppSelector((state) =>
         state.assets.assets.find((element) =>
-            // @ts-expect-error: fix typing for AnyAssetAmount
-            element.asset.symbol === assetSymbolSelect))?.asset.contractAddress;
+            element.asset.symbol === assetSymbolSelect))?.asset || ETH;
 
     const defaultGasConfidence = useAppSelector((state) =>
         state.settings.defaultGasSpeed.confidence);
@@ -103,6 +103,22 @@ const Send = (): React.ReactElement => {
         setShow(false);
     };
 
+    // estimate bonder fees and destination TX fee using hop exchange
+    React.useEffect(() => {
+        async function estimateFee() {
+            const fee = await estimateBonderAndDestinationFee(
+                provider, tokenSelected, fromNetwork, toNetwork, tokenAmount,
+            );
+
+            if (fee) {
+                const feeToDisplay = utils.formatUnits(fee, 'ether');
+
+                setHopFee(Number(feeToDisplay).toFixed(5));
+            }
+        }
+        estimateFee();
+    }, [provider, tokenSelected, fromNetwork, toNetwork, tokenAmount]);
+
     return (
         <div className="App">
             <header className="App-header">
@@ -122,7 +138,9 @@ const Send = (): React.ReactElement => {
                                     tokenAmount,
                                     recipient,
                                     wallet.privateKey,
-                                    contractAddressOfTokenSelected,
+                                    tokenSelected,
+                                    fromNetwork,
+                                    toNetwork,
                                 );
 
                                 // if transaction failed, tx will return error
@@ -170,8 +188,9 @@ const Send = (): React.ReactElement => {
                             <Col>
                                 <Form.Select
                                     required
-                                    onChange={(e) => console.log('select network from', e)}
-                                    defaultValue={MAINNET.name}>
+                                    onChange={(e) => setFromNetwork(networkList
+                                        .find((n) => e.target.value === n.name) || Chain.Ethereum)}
+                                    defaultValue={fromNetwork.name}>
                                     {networkListOptions}
                                 </Form.Select>
 
@@ -194,8 +213,9 @@ const Send = (): React.ReactElement => {
                             <Col>
                                 <Form.Select
                                     required
-                                    onChange={(e) => console.log('Select Network To', e)}
-                                    defaultValue={POLYGON_MAINNET.name}>
+                                    onChange={(e) => setToNetwork(networkList
+                                        .find((n) => e.target.value === n.name) || Chain.Ethereum)}
+                                    defaultValue={toNetwork.name}>
                                     {networkListOptions}
                                 </Form.Select>
 
@@ -226,9 +246,18 @@ const Send = (): React.ReactElement => {
                         <Row>
                             <Col>
                                 <Form.Label>
-                                    Fee:
+                                    Gas fee:
                                     {' '}
                                     {gasPriceOfTXInETH}
+                                    {' '}
+                                    ETH
+                                </Form.Label>
+                            </Col>
+                            <Col>
+                                <Form.Label>
+                                    Hop Fee:
+                                    {' '}
+                                    {hopFee}
                                     {' '}
                                     ETH
                                 </Form.Label>
