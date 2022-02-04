@@ -11,3 +11,15 @@ export const ETH: FungibleAsset = {
         websiteURL: 'https://ethereum.org',
     },
 };
+
+export const MATIC: FungibleAsset = {
+    name: 'Matic',
+    symbol: 'MATIC',
+    decimals: 18,
+    metadata: {
+        coinGeckoID: 'polygon',
+        logoURL: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+        tokenLists: [],
+        websiteURL: 'https://polygon.technology/',
+    },
+};
