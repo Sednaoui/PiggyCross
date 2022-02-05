@@ -5,12 +5,14 @@ import {
 import {
     Hop,
     Chain,
+    HopBridge,
 } from '@hop-protocol/sdk';
 import {
     BigNumber,
     Wallet,
     utils,
     providers,
+    constants,
 } from 'ethers';
 
 import { FungibleAsset } from '../assets';
@@ -113,3 +115,19 @@ export async function estimateTokensAtDestination(
     return null;
 }
 
+/**
+ * Get Approval to send tokens for hop contracts
+ */
+export const getHopContractApproval = async (
+    bridge: HopBridge,
+    fromNetwork: Chain,
+):Promise<TransactionResponse> => {
+    const approvalAddress = await bridge.getSendApprovalAddress(fromNetwork, false);
+
+    const token = bridge.getCanonicalToken(fromNetwork);
+
+    const amountToApprove = constants.MaxUint256;
+    const tx = await token.approve(approvalAddress, amountToApprove);
+
+    return tx;
+};
