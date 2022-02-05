@@ -79,3 +79,37 @@ export async function estimateBonderAndDestinationFee(
 
     return null;
 }
+
+/**
+ * Estimate Tokens at destination when transfering from one network to the Other
+ * @param {AlchemyProvider} provider - AlchemyProvider instance
+ * @param {FungibleAsset} asset - FungibleAsset instance
+ * @param {Chain} fromNetwork - Network of the sender
+ * @param {Chain} toNetwork - Chain of the receiver
+ * @param {bigint} amount - Amount of Tokens to send
+ * @returns {BigNumber} - estimated token at destination
+ */
+export async function estimateTokensAtDestination(
+    provider: AlchemyProvider,
+    asset: FungibleAsset,
+    fromNetwork: Chain,
+    toNetwork: Chain,
+    amount: string,
+): Promise<BigNumber | null> {
+    const hop = new Hop('mainnet');
+
+    if (fromNetwork !== toNetwork && Number(amount) > 0) {
+        const bridge = hop.connect(provider).bridge(asset.symbol);
+
+        const amountBN = utils.parseUnits(amount, asset.decimals);
+
+        const amountOut = await bridge.getAmountOut(
+            amountBN, fromNetwork, toNetwork,
+        );
+
+        return amountOut;
+    }
+
+    return null;
+}
+

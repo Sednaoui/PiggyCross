@@ -7,7 +7,10 @@ import { useProvider } from 'wagmi';
 
 import { ETH } from '../../../../lib/constants/currencies';
 import { getEthereumNetwork } from '../../../../lib/helpers';
-import { estimateBonderAndDestinationFee } from '../../../../lib/hop/hop';
+import {
+    estimateBonderAndDestinationFee,
+    estimateTokensAtDestination,
+} from '../../../../lib/hop/hop';
 import {
     Form,
     Button,
@@ -44,6 +47,7 @@ const Send = (): React.ReactElement => {
     const [hopFee, setHopFee] = useState('0');
     const [password, setPassword] = useState('');
     const [txTransaction, setTxTransaction] = useState('');
+    const [displayTokenAtDestination, setDisplayTokenAtDestination] = useState('0');
 
     const walletInstance = useAppSelector((state) => state.wallet.walletInstance);
     const walletAddress = walletInstance?.address;
@@ -118,6 +122,25 @@ const Send = (): React.ReactElement => {
         }
         estimateFee();
     }, [provider, tokenSelected, fromNetwork, toNetwork, tokenAmount]);
+
+    React.useEffect(() => {
+        async function estimateTokenAtDestinationNetwork() {
+            const token = await estimateTokensAtDestination(
+                provider,
+                tokenSelected,
+                fromNetwork,
+                toNetwork,
+                tokenAmount,
+            );
+
+            if (token) {
+                const tokenAtDest = utils.formatUnits(token, 'ether');
+
+                setDisplayTokenAtDestination(Number(tokenAtDest).toFixed(5));
+            }
+        }
+        estimateTokenAtDestinationNetwork();
+    }, [provider, tokenSelected, toNetwork, fromNetwork, tokenAmount]);
 
     return (
         <div className="App">
@@ -218,16 +241,14 @@ const Send = (): React.ReactElement => {
                                     defaultValue={toNetwork.name}>
                                     {networkListOptions}
                                 </Form.Select>
-
                             </Col>
                             <Col>
                                 <Form.Control
-                                    disabled
                                     required
-                                    type="text"
-                                    placeholder="0.00"
+                                    type="string"
+                                    placeholder={displayTokenAtDestination}
                                     name="amount"
-                                    defaultValue="0.00" />
+                                    readOnly />
                             </Col>
                         </Row>
                     </Form.Group>
