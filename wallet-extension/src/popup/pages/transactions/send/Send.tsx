@@ -142,6 +142,8 @@ const Send = (): React.ReactElement => {
         estimateTokenAtDestinationNetwork();
     }, [provider, tokenSelected, toNetwork, fromNetwork, tokenAmount]);
 
+    const fromNetworkName = fromNetwork.name.toLocaleLowerCase();
+
     return (
         <div className="App">
             <header className="App-header">
@@ -318,10 +320,12 @@ const Send = (): React.ReactElement => {
                 {txTransaction && (
                     <div className="mt-3">
                         <a
-                            href={`https://ropsten.etherscan.io/tx/${txTransaction}`}
+                            href={
+                                `https://${fromNetworkName}.etherscan.io/tx/${txTransaction}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer">
-                            {txTransaction}
+                            Tranasction Confirmed!
                         </a>
                     </div>
                 )}
