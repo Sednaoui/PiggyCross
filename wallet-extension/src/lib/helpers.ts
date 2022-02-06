@@ -4,6 +4,7 @@ import { CURRENT_NETWORK } from '../popup/model/constants';
 import {
     MAINNET,
     ROPSTEN,
+    OPTIMISM_MAINNET,
 } from './constants/networks';
 import { EVMNetwork } from './networks';
 
@@ -26,6 +27,9 @@ export function getEthereumNetwork(): EVMNetwork {
 
     if (ethereumNetwork === 'ROPSTEN') {
         return ROPSTEN;
+    }
+    if (ethereumNetwork === 'OPTIMISM') {
+        return OPTIMISM_MAINNET;
     }
 
     // Default to ROPSTEN

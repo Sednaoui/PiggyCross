@@ -19,8 +19,15 @@ export const ROPSTEN: EVMNetwork = {
 };
 
 export const POLYGON_MAINNET: EVMNetwork = {
-    name: 'Polygon Mainnet',
+    name: 'Polygon',
     baseAsset: MATIC,
     chainID: '137',
+    family: 'EVM',
+};
+
+export const OPTIMISM_MAINNET: EVMNetwork = {
+    name: 'Optimism',
+    baseAsset: ETH,
+    chainID: '10',
     family: 'EVM',
 };
