@@ -32,6 +32,7 @@ export const sendHop = async (
     toNetwork: Chain,
     amount: string,
     privateKey: string,
+    recipient?: string,
 ): Promise<TransactionResponse | string> => {
     const hop = new Hop('mainnet');
 
@@ -44,7 +45,12 @@ export const sendHop = async (
 
     const amountBN = utils.parseUnits(amount, asset.decimals);
 
-    const hopTransaction = await bridge.send(amountBN, fromNetwork, toNetwork);
+    const hopTransaction = await bridge.send(
+        amountBN,
+        fromNetwork,
+        toNetwork,
+        { recipient },
+    );
 
     return hopTransaction;
 };
