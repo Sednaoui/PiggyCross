@@ -1,3 +1,6 @@
 [submodule "zapper-daap-demo"]
 	path = zapper-daap-demo
 	url = https://github.com/Sednaoui/zapper-daap-demo.git
+[submodule "create-react-extension"]
+	path = create-react-extension
+	url = https://github.com/QuocAnhVu/create-react-extension.git
