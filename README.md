@@ -1,5 +1,7 @@
 # PiggyCross (🐷,🐷)
 
+![image](https://www.seekpng.com/png/detail/56-568740_hamm-1-hamm-toy-story-png.png)
+
 A web3 crypto wallet with build-in bridge support, built as a [browser extension](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension).
 
 We are building an ethereum wallet that can enable bridging of assets seamlessly, as opposed to manually moving funds from one network to the other. That allows users to interact with any contract on any network, no matter where their funds are. 
